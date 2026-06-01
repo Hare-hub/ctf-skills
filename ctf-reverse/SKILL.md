@@ -74,12 +74,10 @@ r2pm -ci r2ghidra   # Native Ghidra decompiler for radare2
 
 ## Find Similar Writeups
 
-If you are stuck or want to see how others solved similar reverse engineering challenges, invoke `/ctf-similar-search` with the challenge name, competition name, or unique strings (function names, strings, error messages) from the binary:
+If you are stuck or want to see how others solved similar reverse engineering challenges, follow the ctf-similar-search skill's methodology — describe the search request in natural language using the challenge name, competition name, or unique strings (function names, strings, error messages) from the binary:
 
-```
-/similar-search "HGAME 2024 baby reverse"
-/similar-search "CUSTOM_MAGIC_BYTES"
-```
+"HGAME 2024 baby reverse"
+"CUSTOM_MAGIC_BYTES"
 
 This searches for reference writeups via Tavily API and can help identify the right analysis approach. Avoid generic terms like "anti-debug" or "obfuscation" — use challenge-specific identifiers instead.
 

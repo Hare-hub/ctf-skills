@@ -66,12 +66,10 @@ gem install zsteg
 
 ## Find Similar Writeups
 
-If you are stuck or want to see how others solved similar forensics challenges, invoke `/ctf-similar-search` with the challenge name, competition name, or unique strings (file names, protocol details, metadata fields) from the challenge:
+If you are stuck or want to see how others solved similar forensics challenges, follow the ctf-similar-search skill's methodology — describe the search request in natural language using the challenge name, competition name, or unique strings (file names, protocol details, metadata fields) from the challenge:
 
-```
-/similar-search "DASCTF forensics network"
-/similar-search "USB HID keyboard capture"
-```
+"DASCTF forensics network"
+"USB HID keyboard capture"
 
 This searches for reference writeups via Tavily API and can help identify the right extraction or analysis technique. Avoid generic terms like "steganography" or "memory dump" — use challenge-specific identifiers instead.
 

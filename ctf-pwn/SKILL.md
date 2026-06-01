@@ -70,12 +70,10 @@ gem install one_gadget seccomp-tools
 
 ## Find Similar Writeups
 
-If you are stuck or want to see how others solved similar pwn challenges, invoke `/ctf-similar-search` with the challenge name, competition name, or unique strings (binary names, function names, error messages) from the challenge:
+If you are stuck or want to see how others solved similar pwn challenges, follow the ctf-similar-search skill's methodology — describe the search request in natural language using the challenge name, competition name, or unique strings (binary names, function names, error messages) from the challenge:
 
-```
-/similar-search "BUUCTF pwn1"
-/similar-search "baby overflow"
-```
+"BUUCTF pwn1"
+"baby overflow"
 
 This searches for reference writeups via Tavily API and can help identify the right exploitation technique. Avoid generic terms like "buffer overflow" or "heap" — use challenge-specific identifiers instead.
 

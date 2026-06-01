@@ -58,12 +58,10 @@ brew install ffmpeg qrencode
 
 ## Find Similar Writeups
 
-If you are stuck or want to see how others solved similar miscellaneous challenges, invoke `/ctf-similar-search` with the challenge name, competition name, or unique strings from the challenge:
+If you are stuck or want to see how others solved similar miscellaneous challenges, follow the ctf-similar-search skill's methodology — describe the search request in natural language using the challenge name, competition name, or unique strings from the challenge:
 
-```
-/similar-search "DiceCTF pyjail"
-/similar-search "BSidesSF encoding challenge"
-```
+"DiceCTF pyjail"
+"BSidesSF encoding challenge"
 
 This searches for reference writeups via Tavily API and can help identify the right approach. Avoid generic terms like "jail" or "encoding" — use challenge-specific identifiers instead.
 

@@ -45,12 +45,10 @@ brew install python@3
 
 ## Find Similar Writeups
 
-If you are stuck or want to see how others solved similar AI/ML challenges, invoke `/ctf-similar-search` with the challenge name, competition name, or unique strings (model architecture details, loss function names) from the challenge:
+If you are stuck or want to see how others solved similar AI/ML challenges, follow the ctf-similar-search skill's methodology — describe the search request in natural language using the challenge name, competition name, or unique strings (model architecture details, loss function names) from the challenge:
 
-```
-/similar-search "DiceCTF model weight perturbation"
-/similar-search "BSidesSF adversarial patch"
-```
+"DiceCTF model weight perturbation"
+"BSidesSF adversarial patch"
 
 This searches for reference writeups via Tavily API and can help identify the right attack technique. Avoid generic terms like "adversarial" or "prompt injection" — use challenge-specific identifiers instead.
 

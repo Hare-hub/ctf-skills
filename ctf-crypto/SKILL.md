@@ -66,12 +66,10 @@ brew install hashcat
 
 ## Find Similar Writeups
 
-If you are stuck or want to see how others solved similar crypto challenges, invoke `/ctf-similar-search` with the challenge name, competition name, or unique strings from the challenge:
+If you are stuck or want to see how others solved similar crypto challenges, follow the ctf-similar-search skill's methodology — describe the search request in natural language using the challenge name, competition name, or unique strings from the challenge:
 
-```
-/similar-search "DASCTF RSA challenge"
-/similar-search "Hastad broadcast e=3"
-```
+"DASCTF RSA challenge"
+"Hastad broadcast e=3"
 
 This searches for reference writeups via Tavily API and can help identify the right attack path. Avoid generic terms like "RSA" or "AES" — use challenge-specific identifiers instead.
 

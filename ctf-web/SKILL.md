@@ -70,12 +70,10 @@ go install github.com/ffuf/ffuf/v2@latest
 
 ## Find Similar Writeups
 
-If you are stuck or want to see how others solved similar web challenges, invoke `/ctf-similar-search` with the challenge name, competition name, or unique strings (code snippets, error messages) from the challenge:
+If you are stuck or want to see how others solved similar web challenges, follow the ctf-similar-search skill's methodology — describe the search request in natural language using the challenge name, competition name, or unique strings (code snippets, error messages) from the challenge:
 
-```
-/similar-search DASCTF URL Storage
-/similar-search "def encrypt_flag(key):"
-```
+"DASCTF URL Storage"
+"def encrypt_flag(key)"
 
 This searches for reference writeups via Tavily API and can help identify the right exploitation path. Avoid generic terms like "SSRF" or "XSS" — use challenge-specific identifiers instead.
 

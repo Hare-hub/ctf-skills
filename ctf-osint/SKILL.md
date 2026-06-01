@@ -45,12 +45,10 @@ brew install whois bind nmap exiftool imagemagick curl
 
 ## Find Similar Writeups
 
-If you are stuck or want to see how others solved similar OSINT challenges, invoke `/ctf-similar-search` with the challenge name, competition name, or unique identifiers from the challenge:
+If you are stuck or want to see how others solved similar OSINT challenges, follow the ctf-similar-search skill's methodology — describe the search request in natural language using the challenge name, competition name, or unique identifiers from the challenge:
 
-```
-/similar-search "MetaCTF social media"
-/similar-search "username OSINT challenge"
-```
+"MetaCTF social media"
+"username OSINT challenge"
 
 This searches for reference writeups via Tavily API and can help identify the right investigation technique. Avoid generic terms like "geolocation" or "DNS" — use challenge-specific identifiers instead.
 

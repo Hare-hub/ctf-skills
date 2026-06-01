@@ -77,18 +77,11 @@ Determine the primary category, then invoke the matching skill.
 
 #### Step 2.5: Find Reference Writeups (Optional)
 
-After categorizing the challenge, optionally search for similar solved challenges to get reference approaches before starting exploitation:
+After categorizing the challenge, optionally search for similar solved challenges to get reference approaches before starting exploitation. Follow the ctf-similar-search skill's methodology — describe the search request in natural language using the challenge name, competition name, or unique identifiers:
 
-```
-# Use competition name + challenge name if known
-/similar-search DASCTF URL Storage
-
-# Or just challenge name
-/similar-search URL Storage
-
-# Or unique strings from the challenge
-/similar-search def encrypt_flag(key):
-```
+"DASCTF URL Storage"
+"URL Storage"
+"def encrypt_flag(key)"
 
 This helps understand common approaches for this type of challenge. Use when:
 - The challenge seems unfamiliar or complex
@@ -144,7 +137,7 @@ If your first approach doesn't work:
 3. **Look for what you missed** -- Hidden files, alternate ports, response headers, comments in source, metadata in images.
 4. **Simplify** -- If an exploit is too complex, check if there's a simpler path (default creds, known CVE, logic bug).
 5. **Check edge cases** -- Off-by-one, race conditions, integer overflow, encoding mismatches.
-6. **Search for similar challenges** -- If pivoting categories and trying alternative techniques still has not yielded progress after 3+ failed approaches, invoke `/similar-search` with the challenge name or unique identifiers (not generic vulnerability types) to find reference writeups from similar past challenges.
+6. **Search for similar challenges** -- If pivoting categories and trying alternative techniques still has not yielded progress after 3+ failed approaches, follow the ctf-similar-search skill's methodology: describe the search in natural language using the challenge name or unique identifiers (not generic vulnerability types) to find reference writeups from similar past challenges.
 
 **Common multi-category patterns:**
 - Forensics + Crypto: encrypted data in PCAP/disk image, need crypto to decrypt
