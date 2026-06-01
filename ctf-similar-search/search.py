@@ -7,6 +7,7 @@ Uses Tavily API for search and content extraction
 import sys
 import os
 import json
+import re
 import subprocess
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
@@ -86,6 +87,8 @@ def main():
         print("  python3 search.py extract 'https://example.com/article1' 'https://example.com/article2'")
         sys.exit(1)
 
+    # Detect code/identifier queries (exempt from word limit):
+    # Contains code-like patterns: parens, braces, equals, colons, dots, underscores, quotes
     action = sys.argv[1]
 
     if action == "search":
@@ -94,6 +97,26 @@ def main():
             sys.exit(1)
 
         keyword = " ".join(sys.argv[2:])
+        word_count = len(keyword.split())
+
+        is_code_query = bool(re.search(r'[(){}\[\]=\':"_.]|def |class |import |from |return ', keyword))
+
+        if not is_code_query and word_count > 3:
+            print("=" * 60)
+            print("ERROR: Non-code search query exceeds 3-word limit.")
+            print("=" * 60)
+            print(f"Query ({word_count} words): {keyword}")
+            print()
+            print("For non-code searches, use at most 3 distinctive keywords.")
+            print("Examples:")
+            print("  ✅ 'DASCTF URL Storage'     (3 words)")
+            print("  ✅ 'HGAME baby web'         (3 words)")
+            print("  ❌ 'HGAME 2024 baby web challenge' (5 words — drop filler)")
+            print()
+            print("Code snippets, error messages, and unique identifiers are exempt.")
+            print("If this IS a code/identifier query, include code-like characters")
+            print("(parens, braces, equals, colons) to bypass the limit.")
+            sys.exit(1)
 
         print("=" * 60)
         print("Tavily Search")

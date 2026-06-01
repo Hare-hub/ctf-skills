@@ -36,15 +36,15 @@ Choose keywords based on available information:
 
 #### Scenario 1: Known Competition + Challenge Name
 ```bash
-# Format: [Competition Name] [Challenge Name]
+# Format: [Competition Name] [Challenge Name] — max 3 words
 ./search.sh search "DASCTF URL Storage"
-./search.sh search "HGAME 2024 baby web"
+./search.sh search "HGAME baby web"
 ./search.sh search "BUUCTF pwn1"
 ```
 
 #### Scenario 2: Challenge Name Only (no competition info)
 ```bash
-# Use challenge name directly
+# Use challenge name directly — max 3 words
 ./search.sh search "URL Storage"
 ./search.sh search "baby overflow"
 ./search.sh search "crypto-rsa"
@@ -52,29 +52,60 @@ Choose keywords based on available information:
 
 #### Scenario 3: Unique Identifiers (code snippets, strings)
 ```bash
-# Use unique, non-trivial strings from the challenge
+# Use unique, non-trivial strings from the challenge — NO word limit
 ./search.sh search "def encrypt_flag(key): return base64"
 ./search.sh search "CUSTOM_MAGIC_BYTES"
 ./search.sh search "ERROR: invalid padding in AES block"
 ```
 
+### ⚠️ Critical: 3-Word Limit for Non-Code Queries
+
+**All keyword searches that are NOT code snippets or unique identifier strings MUST NOT exceed 3 words.** This constraint ensures precise, focused queries that return relevant CTF writeup results instead of broad, diluted searches.
+
+| Search Type | Word Limit | Examples |
+|-------------|-----------|----------|
+| Competition + Challenge name | ≤ 3 words | `"DASCTF URL Storage"`, `"HGAME baby web"` |
+| Challenge name only | ≤ 3 words | `"URL Storage"`, `"baby overflow"` |
+| Code snippets / strings | **No limit** | `"def encrypt_flag(key): return base64"` |
+| Error messages / identifiers | **No limit** | `"CUSTOM_MAGIC_BYTES"`, `"ERROR: invalid padding in AES block"` |
+
+**For competition + challenge name searches**, drop filler words (year numbers, "CTF", "competition", "writeup", "solution") and keep only the 3 most distinctive words:
+
+- ❌ `"HGAME 2024 baby web challenge"` (5 words)
+- ✅ `"HGAME baby web"` (3 words)
+- ❌ `"DASCTF 2023 URL Storage writeup"` (5 words)
+- ✅ `"DASCTF URL Storage"` (3 words)
+- ❌ `"PlaidCTF 2025 zero day exploit solution"` (6 words)
+- ✅ `"PlaidCTF zero day"` (3 words)
+
+**For code/string searches**, use the entire unique snippet — these are exempt from the word limit:
+
+- ✅ `"def xor_encrypt(data, key):"` (code — exempt)
+- ✅ `"ERROR: invalid padding in AES block"` (error string — exempt)
+- ✅ `"CUSTOM_MAGIC_BYTES"` (identifier — exempt)
+
 ### Keyword Rules
 
 | ✅ Good Keywords | ❌ Bad Keywords |
 |------------------|-----------------|
-| Competition + Challenge name | Single vulnerability type (SSRF, XSS) |
-| Challenge name | Generic terms (web, pwn, crypto) |
-| Unique code snippets | Full sentences |
-| Specific error messages | Articles (a, the, in) |
-| Library/framework names | Tool names alone |
-| Custom function names | Generic strings (flag{}, etc.) |
+| Competition + Challenge name (≤3 words) | Single vulnerability type (SSRF, XSS) |
+| Challenge name (≤3 words) | Generic terms (web, pwn, crypto) |
+| Unique code snippets (no word limit) | Full sentences |
+| Specific error messages (no word limit) | Articles (a, the, in) |
+| Library/framework names | Generic strings (flag{}, etc.) |
+| Custom function names | Tool names alone |
 
 **Why avoid these?**
 - "SSRF" → returns generic vulnerability explanations, not CTF writeups
 - "flag{" → returns millions of unrelated results
 - "URL Storage DASCTF" → returns specific CTF challenges
 
-**Key principle:** Use keywords that uniquely identify THIS challenge, not the general technique or common patterns.
+**Why the 3-word limit?**
+- Forces precision: only the most distinctive keywords survive
+- Filters noise: filler words like "challenge", "writeup", "solution" dilute results
+- Improves API efficiency: shorter, focused queries consume fewer credits
+
+**Key principle:** Use keywords that uniquely identify THIS challenge, not the general technique or common patterns. Keep non-code queries to 3 words or fewer.
 
 ### Step 2: Review Search Results
 
@@ -111,13 +142,13 @@ Based on extracted content:
 ## Quick Start
 
 ```bash
-# Scenario 1: Competition + Challenge name
+# Scenario 1: Competition + Challenge name (≤3 words)
 ./search.sh search "DASCTF URL Storage"
 
-# Scenario 2: Challenge name only
+# Scenario 2: Challenge name only (≤3 words)
 ./search.sh search "URL Storage"
 
-# Scenario 3: Unique identifier from challenge
+# Scenario 3: Unique identifier from challenge (no word limit)
 ./search.sh search "def xor_encrypt(data, key):"
 ./search.sh search "ERROR: invalid padding"
 
@@ -132,5 +163,6 @@ Based on extracted content:
 3. **Avoid generic terms**: Don't search "SSRF CTF writeup" - too broad
 4. **Review first**: Check search results before extracting
 5. **Extract selectively**: Only extract URLs that look relevant
+6. **Respect the 3-word limit**: For non-code queries, strip filler words and keep only the 3 most distinctive keywords
 
 $ARGUMENTS
