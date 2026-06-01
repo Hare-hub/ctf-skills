@@ -3,7 +3,7 @@ name: ctf-crypto
 description: Provides cryptography attack techniques for CTF challenges. Use when attacking encryption, hashing, signatures, ZKP, PRNG, or mathematical crypto problems involving RSA, AES, ECC, lattices, LWE, CVP, number theory, Coppersmith, Pollard, Wiener, padding oracle, GCM, key derivation, or stream/block cipher weaknesses.
 license: MIT
 compatibility: Requires filesystem-based agent (Claude Code or similar) with bash, Python 3, and internet access for tool installation.
-allowed-tools: Bash Read Write Edit Glob Grep Task WebFetch WebSearch
+allowed-tools: Bash Read Write Edit Glob Grep Task WebFetch WebSearch Skill
 metadata:
   user-invocable: "false"
 ---
@@ -63,6 +63,17 @@ brew install hashcat
 - If the task is just implementing an exploit against a vulnerable network service after the crypto part is solved, switch to `/ctf-pwn` or `/ctf-web`.
 - If the crypto challenge involves adversarial ML, model extraction, or neural-network-based ciphers, switch to `/ctf-ai-ml`.
 - If the challenge is really an encoding puzzle, esoteric cipher, or polyglot trick rather than true cryptanalysis, switch to `/ctf-misc`.
+
+## Find Similar Writeups
+
+If you are stuck or want to see how others solved similar crypto challenges, invoke `/ctf-similar-search` with the challenge name, competition name, or unique strings from the challenge:
+
+```
+/similar-search "DASCTF RSA challenge"
+/similar-search "Hastad broadcast e=3"
+```
+
+This searches for reference writeups via Tavily API and can help identify the right attack path. Avoid generic terms like "RSA" or "AES" — use challenge-specific identifiers instead.
 
 ## Quick Start Commands
 

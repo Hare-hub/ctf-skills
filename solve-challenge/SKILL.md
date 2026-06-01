@@ -75,6 +75,26 @@ Invoke `/ctf-misc` and load its `ctfd-navigation.md` for the full API reference 
 
 Determine the primary category, then invoke the matching skill.
 
+#### Step 2.5: Find Reference Writeups (Optional)
+
+After categorizing the challenge, optionally search for similar solved challenges to get reference approaches before starting exploitation:
+
+```
+# Use competition name + challenge name if known
+/similar-search DASCTF URL Storage
+
+# Or just challenge name
+/similar-search URL Storage
+
+# Or unique strings from the challenge
+/similar-search def encrypt_flag(key):
+```
+
+This helps understand common approaches for this type of challenge. Use when:
+- The challenge seems unfamiliar or complex
+- You want to see how others solved similar problems
+- You need inspiration for attack vectors
+
 **By file type:**
 - `.pcap`, `.pcapng`, `.evtx`, `.raw`, `.dd`, `.E01` -> forensics
 - `.elf`, `.exe`, `.so`, `.dll`, binary with no extension -> reverse or pwn (check if remote service provided -- if yes, likely pwn)
@@ -124,6 +144,7 @@ If your first approach doesn't work:
 3. **Look for what you missed** -- Hidden files, alternate ports, response headers, comments in source, metadata in images.
 4. **Simplify** -- If an exploit is too complex, check if there's a simpler path (default creds, known CVE, logic bug).
 5. **Check edge cases** -- Off-by-one, race conditions, integer overflow, encoding mismatches.
+6. **Search for similar challenges** -- If pivoting categories and trying alternative techniques still has not yielded progress after 3+ failed approaches, invoke `/similar-search` with the challenge name or unique identifiers (not generic vulnerability types) to find reference writeups from similar past challenges.
 
 **Common multi-category patterns:**
 - Forensics + Crypto: encrypted data in PCAP/disk image, need crypto to decrypt

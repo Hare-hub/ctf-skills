@@ -3,7 +3,7 @@ name: ctf-pwn
 description: Provides binary exploitation techniques for CTF challenges. Use when you already have a vulnerable native target or service and need to turn memory corruption or low-level primitives into code execution or privilege escalation, such as buffer overflows, format strings, heap bugs, ROP, ret2libc, shellcode, kernel exploitation, seccomp bypass, sandbox escape, or Windows/Linux exploit chains. Do not use it when the main blocker is understanding what the binary does; use reverse engineering first. Do not use it for pure web bugs, disk or packet forensics, or standalone crypto/math challenges.
 license: MIT
 compatibility: Requires filesystem-based agent (Claude Code or similar) with bash, Python 3, and internet access for tool installation.
-allowed-tools: Bash Read Write Edit Glob Grep Task WebFetch WebSearch
+allowed-tools: Bash Read Write Edit Glob Grep Task WebFetch WebSearch Skill
 metadata:
   user-invocable: "false"
 ---
@@ -67,6 +67,17 @@ gem install one_gadget seccomp-tools
 - If the service is really a restricted shell, encoding puzzle, or sandbox language challenge, switch to `/ctf-misc`.
 - If the exploit path depends on a web endpoint, session bug, or upload primitive more than memory corruption, switch to `/ctf-web`.
 - If the vulnerability requires breaking a cryptographic primitive before exploitation, switch to `/ctf-crypto`.
+
+## Find Similar Writeups
+
+If you are stuck or want to see how others solved similar pwn challenges, invoke `/ctf-similar-search` with the challenge name, competition name, or unique strings (binary names, function names, error messages) from the challenge:
+
+```
+/similar-search "BUUCTF pwn1"
+/similar-search "baby overflow"
+```
+
+This searches for reference writeups via Tavily API and can help identify the right exploitation technique. Avoid generic terms like "buffer overflow" or "heap" — use challenge-specific identifiers instead.
 
 ## Quick Start Commands
 

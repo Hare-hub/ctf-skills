@@ -3,7 +3,7 @@ name: ctf-ai-ml
 description: Provides AI and machine learning techniques for CTF challenges. Use when attacking ML models, crafting adversarial examples, performing model extraction, prompt injection, membership inference, training data poisoning, fine-tuning manipulation, neural network analysis, LoRA adapter exploitation, LLM jailbreaking, or solving AI-related puzzles.
 license: MIT
 compatibility: Requires filesystem-based agent (Claude Code or similar) with bash, Python 3, and internet access for tool installation.
-allowed-tools: Bash Read Write Edit Glob Grep Task WebFetch WebSearch
+allowed-tools: Bash Read Write Edit Glob Grep Task WebFetch WebSearch Skill
 metadata:
   user-invocable: "false"
 ---
@@ -42,6 +42,17 @@ brew install python@3
 - If the challenge becomes pure math, lattice reduction, or number theory with no ML component, switch to `/ctf-crypto`.
 - If the task is reverse engineering a compiled ML model binary (ONNX loader, TensorRT engine, custom inference binary), switch to `/ctf-reverse`.
 - If the challenge is a game or puzzle that merely uses ML as a wrapper (e.g., Python jail inside a chatbot), switch to `/ctf-misc`.
+
+## Find Similar Writeups
+
+If you are stuck or want to see how others solved similar AI/ML challenges, invoke `/ctf-similar-search` with the challenge name, competition name, or unique strings (model architecture details, loss function names) from the challenge:
+
+```
+/similar-search "DiceCTF model weight perturbation"
+/similar-search "BSidesSF adversarial patch"
+```
+
+This searches for reference writeups via Tavily API and can help identify the right attack technique. Avoid generic terms like "adversarial" or "prompt injection" — use challenge-specific identifiers instead.
 
 ## Quick Start Commands
 

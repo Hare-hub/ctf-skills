@@ -3,7 +3,7 @@ name: ctf-forensics
 description: Provides digital forensics and signal analysis techniques for CTF challenges. Use when analyzing disk images, memory dumps, event logs, network captures, cryptocurrency transactions, steganography, PDF analysis, Windows registry, Volatility, PCAP, Docker images, coredumps, side-channel power traces, DTMF audio spectrograms, packet timing analysis, CD audio disc images, or recovering deleted files and credentials.
 license: MIT
 compatibility: Requires filesystem-based agent (Claude Code or similar) with bash, Python 3, and internet access for tool installation.
-allowed-tools: Bash Read Write Edit Glob Grep Task WebFetch WebSearch
+allowed-tools: Bash Read Write Edit Glob Grep Task WebFetch WebSearch Skill
 metadata:
   user-invocable: "false"
 ---
@@ -63,6 +63,17 @@ gem install zsteg
 - If the forensic evidence is really an encoding puzzle, steganography trick, or esoteric format rather than true forensics, switch to `/ctf-misc`.
 - If you need to trace infrastructure, attribute actors, or investigate public records from forensic findings, switch to `/ctf-osint`.
 - If the recovered artifact is a compiled binary or firmware that needs disassembly and analysis, switch to `/ctf-reverse`.
+
+## Find Similar Writeups
+
+If you are stuck or want to see how others solved similar forensics challenges, invoke `/ctf-similar-search` with the challenge name, competition name, or unique strings (file names, protocol details, metadata fields) from the challenge:
+
+```
+/similar-search "DASCTF forensics network"
+/similar-search "USB HID keyboard capture"
+```
+
+This searches for reference writeups via Tavily API and can help identify the right extraction or analysis technique. Avoid generic terms like "steganography" or "memory dump" — use challenge-specific identifiers instead.
 
 ## Quick Start Commands
 

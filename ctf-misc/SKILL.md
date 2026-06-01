@@ -56,6 +56,17 @@ brew install ffmpeg qrencode
 - If the input is mostly files, images, audio, or packet captures that need recovery work first, switch to `/ctf-forensics`.
 - For ML/AI techniques (model attacks, adversarial examples, LLM jailbreaking), see `/ctf-ai-ml`.
 
+## Find Similar Writeups
+
+If you are stuck or want to see how others solved similar miscellaneous challenges, invoke `/ctf-similar-search` with the challenge name, competition name, or unique strings from the challenge:
+
+```
+/similar-search "DiceCTF pyjail"
+/similar-search "BSidesSF encoding challenge"
+```
+
+This searches for reference writeups via Tavily API and can help identify the right approach. Avoid generic terms like "jail" or "encoding" — use challenge-specific identifiers instead.
+
 ## Quick Start Commands
 
 ```bash

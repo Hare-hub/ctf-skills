@@ -3,7 +3,7 @@ name: ctf-reverse
 description: Provides reverse engineering techniques for CTF challenges. Use when the main job is to understand how a compiled, obfuscated, packed, or virtualized target works before exploiting or solving it, including binaries, APKs, WASM, firmware, custom VMs, bytecode, game clients, malware-like loaders, and anti-debug or anti-analysis logic. Do not use it when the vulnerability is already understood and the remaining task is exploitation; use pwn instead. Do not use it for pure web workflows, log or disk forensics, or standalone crypto problems unless reversing the implementation is the real blocker.
 license: MIT
 compatibility: Requires filesystem-based agent (Claude Code or similar) with bash, Python 3, and internet access for tool installation.
-allowed-tools: Bash Read Write Edit Glob Grep Task WebFetch WebSearch
+allowed-tools: Bash Read Write Edit Glob Grep Task WebFetch WebSearch Skill
 metadata:
   user-invocable: "false"
 ---
@@ -71,6 +71,17 @@ r2pm -ci r2ghidra   # Native Ghidra decompiler for radare2
 - If the reversed binary's core logic is a cryptographic algorithm or math problem, switch to `/ctf-crypto`.
 - If the binary is a real malware sample with C2, packing, or evasion behavior, switch to `/ctf-malware`.
 - If the challenge is a toy VM, encoding puzzle, or pyjail rather than a real binary, switch to `/ctf-misc`.
+
+## Find Similar Writeups
+
+If you are stuck or want to see how others solved similar reverse engineering challenges, invoke `/ctf-similar-search` with the challenge name, competition name, or unique strings (function names, strings, error messages) from the binary:
+
+```
+/similar-search "HGAME 2024 baby reverse"
+/similar-search "CUSTOM_MAGIC_BYTES"
+```
+
+This searches for reference writeups via Tavily API and can help identify the right analysis approach. Avoid generic terms like "anti-debug" or "obfuscation" — use challenge-specific identifiers instead.
 
 ## Problem-Solving Workflow
 

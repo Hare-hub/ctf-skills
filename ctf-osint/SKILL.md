@@ -3,7 +3,7 @@ name: ctf-osint
 description: Provides open source intelligence techniques for CTF challenges. Use when gathering information from public sources, social media, geolocation, DNS records, username enumeration, reverse image search, Google dorking, Wayback Machine, Tor relays, FEC filings, or identifying unknown data like hashes and coordinates.
 license: MIT
 compatibility: Requires filesystem-based agent (Claude Code or similar) with bash, Python 3, and internet access for OSINT lookups.
-allowed-tools: Bash Read Write Edit Glob Grep Task WebFetch WebSearch
+allowed-tools: Bash Read Write Edit Glob Grep Task WebFetch WebSearch Skill
 metadata:
   user-invocable: "false"
 ---
@@ -42,6 +42,17 @@ brew install whois bind nmap exiftool imagemagick curl
 - If you already have the files or packets locally and now need extraction or carving, switch to `/ctf-forensics`.
 - If the task becomes active exploitation of a live HTTP service, switch to `/ctf-web`.
 - If you uncover malware samples, beacons, or suspicious binaries during attribution, switch to `/ctf-malware`.
+
+## Find Similar Writeups
+
+If you are stuck or want to see how others solved similar OSINT challenges, invoke `/ctf-similar-search` with the challenge name, competition name, or unique identifiers from the challenge:
+
+```
+/similar-search "MetaCTF social media"
+/similar-search "username OSINT challenge"
+```
+
+This searches for reference writeups via Tavily API and can help identify the right investigation technique. Avoid generic terms like "geolocation" or "DNS" — use challenge-specific identifiers instead.
 
 ## Quick Start Commands
 
