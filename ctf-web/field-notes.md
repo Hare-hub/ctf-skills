@@ -274,6 +274,7 @@ See [node-and-prototype.md](node-and-prototype.md) for detailed exploitation.
 - Host header bypass: `Host: 127.0.0.1`
 - Hidden endpoints: search JS bundles for `/api/internal/`, `/api/admin/`; fuzz with auth cookie for non-`/api` routes like `/internal/*`
 - Client-side gates: `window.overrideAccess = true` or call API directly
+- Login form brute-force: use `/usr/share/wordlists/metasploit/` credentials dicts → custom Python multi-threaded script. See [auth-and-access.md](auth-and-access.md#login-form-brute-force)
 - Password inference: profile data + structured ID format → brute-force
 - Weak signature: check if only first N chars of hash are validated
 - Affine cipher OTP: only 312 possible values (`12 mults × 26 adds`), brute-force all in seconds

