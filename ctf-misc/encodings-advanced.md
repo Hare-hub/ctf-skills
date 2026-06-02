@@ -399,6 +399,8 @@ def decode_multitap(groups):
 
 **Key insight:** Two-layer encoding — DTMF tones encode digits, then digit sequences use multi-tap phone keypad mapping. Use Audacity's spectrogram to identify pause positions for grouping boundaries. Each same-digit run maps to one letter; a pause separates distinct keypresses on the same digit key.
 
+For general audio analysis techniques (channel separation, spectrograms, SSTV, Morse extraction from audio channels), see [audio.md](audio.md).
+
 ---
 
 ### Music Note Interval Steganography (DefCamp 2017)
