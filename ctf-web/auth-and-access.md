@@ -67,64 +67,43 @@ CTF challenges often have weak or predictable credentials behind login forms. Wh
 2. Try common CTF defaults manually: `admin:admin`, `admin:password`, `admin:flag`, `ctf:ctf`, `root:root`
 3. Check if the registration endpoint leaks username validity (timing/enumeration)
 4. Check if the login page leaks user existence via error message differences
-5. **Default username is `admin`** — unless the challenge description, webpage content, source code, or error messages explicitly reference a different username. The overwhelming majority of CTF login brute-force challenges target the `admin` account. Skip username enumeration entirely unless there is a concrete clue pointing elsewhere.
-6. **Cap password dictionaries at 10,000 entries** — CTF brute-force challenges are designed to be solved with targeted, small dictionaries. Using oversized dictionaries wastes time and is almost never necessary. Always truncate or filter dictionaries to ≤10,000 entries before brute-forcing.
+5. **Username is ALWAYS `admin`, period.** Do NOT enumerate usernames. Do NOT create username lists. Even when the challenge says "common usernames" (常用用户名) or "weak passwords" (弱口令), the target account is still `admin` — those hints describe the PASSWORD, not the username. Only use a different username if the challenge gives a SPECIFIC different string (e.g., "username is root", "log in as testuser").
+6. **NEVER create your own dictionary files.** Always use existing Kali wordlists directly from `/usr/share/wordlists/metasploit/`. The recommended password file is `burnett_top_1024.txt` (1,024 entries). Do NOT write `cat > passwords.txt << 'EOF' ...` — pipe the Kali file directly into your brute-force loop.
+7. **Cap password dictionaries at 10,000 entries** — Kali metasploit dictionaries like `burnett_top_1024.txt` (1,024) and `unix_passwords.txt` (1,021) are already under this limit. Do NOT use `password.lst` (88k lines) without truncating.
 
 ### Dictionary Locations
 
-Use dictionaries in the following priority order:
+**CRITICAL: Do NOT create dictionary files.** Never use `cat > passwords.txt << 'EOF'`, `echo > users.txt`, or `python3 -c '...' > /tmp/custom.txt`. Always pipe an existing Kali wordlist directly into your brute-force loop — do not make copies, do not write new files.
 
-**Level 1 — Generate from challenge context (always best):**
+Use dictionaries in this order:
+
+**1. Primary password file — use this for all standard login brute-force:**
 ```bash
-# If you know the password format (e.g., "color" + "year"), generate a custom list:
-python3 -c '
-colors = ["red","blue","green","black","white","purple","orange","pink","gray"]
-years = range(1900, 2026)
-for c in colors:
-    for y in years:
-        print(f"{c}{y}")
-' > /tmp/custom_passwords.txt
+/usr/share/wordlists/metasploit/burnett_top_1024.txt   # 1,024 common passwords
 ```
 
-**Level 2 — Project wordlists directory:**
+**2. Fallback password files (all under 10k entries):**
 ```bash
-# Check if the project ships its own dictionaries first:
-<project_root>/wordlists/
-# e.g., ~/Desktop/ctf-skills/wordlists/
+/usr/share/wordlists/metasploit/unix_passwords.txt      # 1,021 unix passwords
+/usr/share/wordlists/metasploit/burnett_top_500.txt     # 500 common passwords
+/usr/share/wordlists/metasploit/http_default_pass.txt   # 18 default passwords
 ```
-These are project-maintained, curated for CTF scenarios and should be tried before system-wide lists.
 
-**Level 3 — Kali metasploit credential dictionaries:**
+**3. Combo files (username:password pairs, for Basic Auth or single-field forms):**
 ```bash
-# Default credential pairs (most useful for CTF login forms):
 /usr/share/wordlists/metasploit/http_default_userpass.txt
-/usr/share/wordlists/metasploit/http_default_users.txt
-/usr/share/wordlists/metasploit/http_default_pass.txt
 /usr/share/wordlists/metasploit/tomcat_mgr_default_userpass.txt
-/usr/share/wordlists/metasploit/multi_vendor_cctv_dvr_users.txt
-/usr/share/wordlists/metasploit/multi_vendor_cctv_dvr_pass.txt
-
-# Common passwords and usernames:
-/usr/share/wordlists/metasploit/unix_passwords.txt
-/usr/share/wordlists/metasploit/unix_users.txt
-/usr/share/wordlists/metasploit/password.lst
-/usr/share/wordlists/metasploit/namelist.txt
-/usr/share/wordlists/metasploit/burnett_top_500.txt
-/usr/share/wordlists/metasploit/burnett_top_1024.txt
-
-# Flask secret keys (session cookie brute-force only):
-/usr/share/wordlists/metasploit/flask_secret_keys.txt
-/usr/share/wordlists/metasploit/superset_secret_keys.txt
 ```
 
-**Dictionary size limit — all password dictionaries must be ≤10,000 entries:**
-CTF brute-force challenges are designed for small, targeted dictionaries. Large dictionaries waste time and are almost never needed. Always truncate before use:
+**Example — pipe the wordlist directly, do NOT make a copy:**
 ```bash
-# Take first 10,000 lines:
-head -10000 /path/to/dict.txt > /tmp/dict_10k.txt
-
-# Random 10,000 lines (better coverage for sorted/prioritized dictionaries):
-shuf /path/to/dict.txt | head -10000 > /tmp/dict_10k.txt
+while read pwd; do
+  resp=$(curl -s -X POST http://target/login -d "username=admin&password=$pwd")
+  if ! echo "$resp" | grep -q "login failed"; then
+    echo "[+] Found: admin:$pwd"
+    break
+  fi
+done < /usr/share/wordlists/metasploit/burnett_top_1024.txt
 ```
 
 ### Pre-Flight Recon
