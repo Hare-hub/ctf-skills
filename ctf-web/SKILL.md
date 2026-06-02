@@ -111,6 +111,16 @@ curl "https://target.com/page?name={{config}}"
 curl -v -X POST https://target.com/api -H "Content-Type: application/json" -d '{}'
 ```
 
+## Login Brute-Force — Hard Rules
+
+When a challenge requires brute-forcing a login form, follow these rules EXACTLY. Do NOT improvise.
+
+1. **Username is ALWAYS `admin`.** Do NOT enumerate usernames. Do NOT create username lists. Even when the challenge says "弱口令" (weak password) or "常用用户名" (common usernames), those hints describe the PASSWORD — the target account is still `admin`. Only use a different username if the challenge gives a SPECIFIC different string (e.g., "the username is root").
+
+2. **Password file MUST be an existing Kali wordlist.** The default is `/usr/share/wordlists/metasploit/burnett_top_1024.txt`. Do NOT create your own password file — no `cat > passwords.txt`, no hardcoded password lists in code, no reading from a local `Top1000.txt`. Your script must read lines from the Kali wordlist file directly.
+
+For complex scenarios (CSRF tokens, frontend encryption, JSON APIs, Basic Auth, threading), see the reference scripts in [auth-and-access.md](auth-and-access.md) — but those scripts must still follow the two rules above.
+
 ## First Questions to Answer
 
 - Is the flag likely in the browser, an API response, a local file, a database row, or an internal service?
