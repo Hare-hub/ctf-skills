@@ -67,6 +67,8 @@ CTF challenges often have weak or predictable credentials behind login forms. Wh
 2. Try common CTF defaults manually: `admin:admin`, `admin:password`, `admin:flag`, `ctf:ctf`, `root:root`
 3. Check if the registration endpoint leaks username validity (timing/enumeration)
 4. Check if the login page leaks user existence via error message differences
+5. **Default username is `admin`** — unless the challenge description, webpage content, source code, or error messages explicitly reference a different username. The overwhelming majority of CTF login brute-force challenges target the `admin` account. Skip username enumeration entirely unless there is a concrete clue pointing elsewhere.
+6. **Cap password dictionaries at 10,000 entries** — CTF brute-force challenges are designed to be solved with targeted, small dictionaries. Using oversized dictionaries wastes time and is almost never necessary. Always truncate or filter dictionaries to ≤10,000 entries before brute-forcing.
 
 ### Dictionary Locations
 
@@ -115,12 +117,14 @@ These are project-maintained, curated for CTF scenarios and should be tried befo
 /usr/share/wordlists/metasploit/superset_secret_keys.txt
 ```
 
-**Level 4 — Rockyou (large, last resort):**
+**Dictionary size limit — all password dictionaries must be ≤10,000 entries:**
+CTF brute-force challenges are designed for small, targeted dictionaries. Large dictionaries waste time and are almost never needed. Always truncate before use:
 ```bash
-# Compressed by default, decompress first:
-sudo gunzip /usr/share/wordlists/rockyou.txt.gz
-# Then use:
-/usr/share/wordlists/rockyou.txt  # ~14 million passwords
+# Take first 10,000 lines:
+head -10000 /path/to/dict.txt > /tmp/dict_10k.txt
+
+# Random 10,000 lines (better coverage for sorted/prioritized dictionaries):
+shuf /path/to/dict.txt | head -10000 > /tmp/dict_10k.txt
 ```
 
 ### Pre-Flight Recon
